@@ -530,12 +530,25 @@
 
     let userAnswers = [];
     let quizCompleted = false;
+    let shuffledQuizData = [];
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
 
     function renderQuiz() {
+      // Shuffle questions
+      shuffledQuizData = shuffleArray(quizData);
+      
       const container = document.getElementById('quizContainer');
       container.innerHTML = '';
       
-      quizData.forEach((q, index) => {
+      shuffledQuizData.forEach((q, index) => {
         const card = document.createElement('div');
         card.className = 'question-card';
         card.id = `question-${index}`;
@@ -585,7 +598,7 @@
       userAnswers[questionIndex] = optionIndex;
       
       // Show correct answer
-      const correctIndex = quizData[questionIndex].correct;
+      const correctIndex = shuffledQuizData[questionIndex].correct;
       const correctOption = card.querySelector(`[data-option="${correctIndex}"]`);
       
       if (optionIndex === correctIndex) {
@@ -598,15 +611,15 @@
       }
       
       // Check if quiz is complete
-      if (userAnswers.filter(a => a !== undefined).length === quizData.length) {
+      if (userAnswers.filter(a => a !== undefined).length === shuffledQuizData.length) {
         setTimeout(showResults, 500);
       }
     }
 
     function showResults() {
       quizCompleted = true;
-      const correct = userAnswers.filter((ans, idx) => ans === quizData[idx].correct).length;
-      const total = quizData.length;
+      const correct = userAnswers.filter((ans, idx) => ans === shuffledQuizData[idx].correct).length;
+      const total = shuffledQuizData.length;
       const percentage = (correct / total) * 100;
       
       document.getElementById('finalScore').textContent = correct;
@@ -635,12 +648,8 @@
       quizCompleted = false;
       document.getElementById('quizResults').classList.remove('show');
       
-      document.querySelectorAll('.question-card').forEach(card => {
-        card.classList.remove('answered-correct', 'answered-wrong');
-        card.querySelectorAll('.option').forEach(opt => {
-          opt.classList.remove('selected', 'correct', 'wrong', 'disabled');
-        });
-      });
+      // Re-render quiz with shuffled questions
+      renderQuiz();
       
       window.scrollTo({ top: document.querySelector('.quiz-section').offsetTop - 20, behavior: 'smooth' });
     }
